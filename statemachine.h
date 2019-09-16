@@ -1,0 +1,335 @@
+//!
+//! \file statemachine.h
+//! \author Team-3
+//! \date 04-Februar -2018
+
+//! \brief Klasse, in der das Program in Zuständen geteilt wird.
+//! \brief Die Verbindungen zwischen Zuständen werden durch Transitions realisiert
+//!
+#ifndef StateMachine_H
+#define StateMachine_H
+
+#include <QObject>
+#include <QState>
+#include <QStateMachine>
+#include <iostream>
+#include "abstractsensor.h"
+#include "colorsensor.h"
+#include "ultrasonicsensor.h"
+#include "linesensor.h"
+#include "dcmotor.h"
+#include "drivecontrol.h"
+#include "QTimer"
+#include <QCoreApplication>
+#include "xmlreader.h"
+
+
+
+using namespace std;
+
+enum GUIStates{
+    fahrezumlagerartikel=0,
+    wareaufnehmen,
+    fahrezumlagerist,
+    wareabliefern,
+    fahrezumstart,
+    anfangsstartpunkt
+};
+
+
+
+class StateMachine : public QObject
+{
+    Q_OBJECT
+public:
+    //!
+    //! \brief StateMachine (Konstruktor mit Pointern zu Motoren, Sensoren, und PID Regler)
+    //! \param MotorLeft
+    //! \param MotorRight
+    //! \param drivecontrol
+    //! \param LineSensorLeft
+    //! \param LineSensorRight
+    //! \param ColorSensor
+    //! \param Ultrasonic
+    //!
+    StateMachine(DcMotor &MotorLeft, DcMotor &MotorRight, drivecontrol &drivecontrol,
+                                LineSensor &LineSensorLeft, LineSensor &LineSensorRight, ColorSensor &ColorSensor, UltrasonicSensor &Ultrasonic);
+    //!
+    //! \brief StateMachine Destruktor
+    //!
+    ~StateMachine();
+
+
+
+signals:
+    //!
+    //! \brief sgn_stateDone (Transition)
+    //!
+    void sgn_stateDone();
+    //!
+    //! \brief sgn_wareAbliefern
+    //!
+    void sgn_wareAbliefern();
+    //!
+    //! \brief sgn_fahrenZumLagerArtikel
+    //!
+    void sgn_fahrenZumLagerArtikel();
+    //!
+    //! \brief sgn_fahrenZumStartpunkt
+    //!
+    void sgn_fahrenZumStartpunkt();
+    //!
+    //! \brief sgn_startStateMachine
+    //!
+    void sgn_startStateMachine();
+    //!
+    //! \brief sgn_sendOrderlist
+    //!
+    void sgn_sendOrderlist(OrderList);
+    //!
+    //! \brief sgn_sendCurrenteState
+    //! \param currentState
+    //! \param currentOrder
+    //!
+    void sgn_sendCurrenteState(int currentState,int currentOrder);
+    //!
+    //! \brief sgn_stateMachineDone
+    //!
+    void sgn_stateMachineDone();
+    //!
+    //! \brief sgn_stopMoving
+    //!
+    void sgn_stopMoving();
+    //!
+    //! \brief sgn_finished
+    //!
+    void sgn_finished();
+
+public slots:
+    //!
+    //! \brief slot_vomStartzumLagerArtikel
+    //!
+    void slot_vomStartzumLagerArtikel();
+    //!
+    //! \brief slot_followLine2
+    //!
+    void slot_followLine2();
+
+
+    //! \brief Lesen des Auftrags
+    //!
+    //! Liest die XML Datei und speichert sie in orders
+    //!
+    //! \QString [in] sPath Pfad zur XML Datei
+
+    void slot_readOrders(QString sPath);
+
+    //!
+    //! \brief slot_fahrenInDenLagerArtikel
+    //!
+    void slot_fahrenInDenLagerArtikel();
+    //!
+    //! \brief slot_wareAufnehmen
+    //!
+    void slot_wareAufnehmen();
+    //!
+    //! \brief slot_fahrenZumLagerist
+    //!
+    void slot_fahrenZumLagerist();
+    //!
+    //! \brief slot_wareAbliefern
+    //!
+    void slot_wareAbliefern();
+    //!
+    //! \brief slot_fahrenZumLagerArtikel
+    //!
+    void slot_fahrenZumLagerArtikel();
+    //!
+    //! \brief slot_fahrenZumStartpunkt
+    //!
+    void slot_fahrenZumStartpunkt();
+    //!
+    //! \brief slot_endeDesAuftrags
+    //!
+    void slot_endeDesAuftrags();
+    //!
+    //! \brief slot_LEDBlink
+    //!
+    void slot_LEDBlink();
+
+    //!
+    //! \brief slot_setStopMoving
+    //!
+    void slot_setStopMoving();
+    //!
+    //! \brief slot_stopWorking
+    //!
+    void slot_stopWorking();
+
+private slots:
+    //!
+    //! \brief slot_SetSpeed
+    //!
+    void slot_SetSpeed(int);
+
+private:
+    //!
+    //! \brief setLEDSteady
+    //! \param state
+    //!
+    void setLEDSteady(bool state);
+    //!
+    //! \brief readyfordelivery
+    //!
+    bool readyfordelivery = false;
+
+    //!
+    //! \brief m_pStateMachine ist die gesmte StateMachine die, alle States beinhaltet
+    //!
+    QStateMachine* m_pStateMachine;
+    //!
+    //! \brief m_pAnfangszustand: Initial State wartet auf Start
+    //!
+    QState* m_pAnfangszustand;
+    //!
+    //! \brief m_pvomStartzumLagerArtikel: Erste State vom Start
+    //!
+    QState* m_pvomStartzumLagerArtikel;
+    //!
+    //! \brief m_pFahrenInDenLagerArtikel: Ablenken in den LagerArtikel
+    //!
+    QState* m_pFahrenInDenLagerArtikel;
+    //!
+    //! \brief m_pWareAufnehmen
+    //!
+    QState* m_pWareAufnehmen;
+    //!
+    //! \brief m_pFahrenZumLagerist
+    //!
+    QState* m_pFahrenZumLagerist;
+    //!
+    //! \brief m_pWareAbliefern
+    //!
+    QState* m_pWareAbliefern;
+    //!
+    //! \brief m_pFahrenZumLagerArtikel
+    //!
+    QState* m_pFahrenZumLagerArtikel;
+    //!
+    //! \brief m_pFahrenZumStartpunkt
+    //!
+    QState* m_pFahrenZumStartpunkt;
+    //!
+    //! \brief m_pEndeDesAuftrags
+    //!
+    QState* m_pEndeDesAuftrags;
+
+    //!
+    //! \brief m_pMotorLeft: Pointers zu motoren
+    //!
+    DcMotor *m_pMotorLeft;
+    //!
+    //! \brief m_pMotorRight: Pointers zu motoren
+    //!
+    DcMotor *m_pMotorRight;
+    drivecontrol *m_pdrivecontrol;
+    //!
+    //! \brief m_pLineSensorLeft: Pointer zu liniesensorleft
+    //!
+    LineSensor *m_pLineSensorLeft;
+    //!
+    //! \brief m_pLineSensorRight: Pointer zu liniesensorright
+    //!
+    LineSensor *m_pLineSensorRight;
+    //!
+    //! \brief m_pColorSensor: Pointer zu Farbsensor
+    //!
+    ColorSensor *m_pColorSensor;
+    //!
+    //! \brief m_pUltrasonic: Pointer zu Ultraschalsensor
+    //!
+    UltrasonicSensor *m_pUltrasonic;
+
+
+    //!
+    //! \brief m_pTimer_LEDBlink: Timer kontrolliert zeit in der LED blinkt
+    //!
+    QTimer *m_pTimer_LEDBlink;
+
+    //!
+    //! \brief job
+    //!
+    OrderList job;
+    //!
+    //! \brief m_nRedLEDPin
+    //!
+    const static int m_nRedLEDPin=28;
+    //!
+    //! \brief m_nGreenLEDPin
+    //!
+    const static int m_nGreenLEDPin=27;
+    //!
+    //! \brief m_nYellowLEDPin
+    //!
+    const static int m_nYellowLEDPin=29;
+    //!
+    //! \brief m_nSpeed
+    //!
+    int m_nSpeed;
+    //!
+    //! \brief waitforcolor: Rot = 1, Grün = 2, Blau = 3, Gelb = 4, Weiss = 5, Schwarz = 6, keine erkannte Farbe = 7
+    //!
+    int waitforcolor=0;
+    //!
+    //! \brief m_nOrdernumber
+    //!
+    int m_nOrdernumber=0;
+    //!
+    //! \brief m_nCurrentWarehouse
+    //!
+    int m_nCurrentWarehouse=0;
+    //!
+    //! \brief m_nDesiredWarehouse
+    //!
+    int m_nDesiredWarehouse=0;
+    //!
+    //! \brief m_dSpeedFollowLine
+    //!
+    double m_dSpeedFollowLine;
+
+    //!
+    //! \brief m_nBlue
+    //!
+
+    const static int m_nBlue=3;
+    //!
+    //! \brief m_bClockwiseDriving
+    //!
+    bool m_bClockwiseDriving=FALSE;
+
+    //!
+    //! \brief m_bObjectFound
+    //!
+    bool m_bObjectFound=FALSE;
+    bool m_bLEDSwitch=TRUE;
+    bool m_bStopMoving=FALSE;
+    //!
+    //! \brief m_cCurrentLagerist: Lagerist A,B oder n:None
+    //!
+    char m_cCurrentLagerist='n';
+    //!
+    //! \brief m_bFollowLineIsRunning
+    //!
+    bool m_bFollowLineIsRunning;
+
+    //!
+    //! \brief createStateMachine
+    //!
+
+    void createStateMachine();
+
+
+};
+
+#endif // STATEMACHINE_H
+
